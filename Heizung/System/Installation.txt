@@ -1,0 +1,7 @@
+pip3 install canopen
+
+- Einträge in config.txt
+- Eintrag in /etc/network/interfaces
+
+
+ifconfig can0 txqueuelen 1000
