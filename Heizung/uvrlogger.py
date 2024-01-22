@@ -100,7 +100,7 @@ def inKommaZahl_UVR16x2(string_arr):
 def inKommaZahl(string_arr):
     UVR1611 = 0x80
     einheiten = ("nan", "C", "W/qm", "l/h", "5", "6", "7", "8", "%")
-    arr = [ord(s) for s in string_arr]    
+    arr = [s for s in string_arr]    
 
     if len(arr) >= 6:
         t = (0x0f & arr[1]) * 256 + (arr[0] & 0xff)
@@ -187,7 +187,10 @@ def UVR1611zeit_auswertung(can_id):
         stunden = sdos[sdo_schluessel(can_id,0x2012,0x01)]
         minuten = sdos[sdo_schluessel(can_id,0x2011,0x01)]
 
-        zeitstempel = '%02d:%02d %02d-%02d-%d' %(ord(stunden[0]), ord(minuten[0]), ord(tag[0]), ord(monat[0]), 2000+ord(jahr[0]))
+        print(tag)
+        print(type(tag))
+
+        zeitstempel = '%02d:%02d %02d-%02d-%d' %(stunden[0], minuten[0], tag[0], monat[0], 2000+jahr[0])
         print(zeitstempel)
 
         emit('datum', zeitstempel)
@@ -204,10 +207,10 @@ def UVR1611leseA_auswertung(can_id):
         ausg_rahmen1 = sdos[sdo_schluessel(can_id, 0x20d1, 0x01)] # Bit Maske der Ausgaenge
         aktiv = sdos[sdo_schluessel(can_id, 0x20d0, 0x01)]  # Bit Maske ob Ausgang aktiv is oder deaktiviert/ungenutzt        
 
-        a8_1 = ord(ausg_rahmen1[0]) 
-        a16_9 = ord(ausg_rahmen1[1]) 
-        aktiv8_1 = ord(aktiv[0]) 
-        aktiv16_9 = ord(aktiv[1]) 
+        a8_1 = ausg_rahmen1[0] 
+        a16_9 = ausg_rahmen1[1] 
+        aktiv8_1 = aktiv[0]
+        aktiv16_9 = aktiv[1] 
 
         print("A8-A1: %s A16-A9: %s" % ('{:08b}'.format(a8_1), '{:08b}'.format(a16_9)))
         print("aktiv8-1: %s aktiv16-9: %s" % ('{:08b}'.format(aktiv8_1), '{:08b}'.format(aktiv16_9)))
@@ -235,7 +238,7 @@ def UVR1611leseE_auswertung(can_id):
         try:
             e = sdos[sdo_schluessel(can_id, index, subindex)]                                                                                              
 
-            if(ord(e[6]) & 0x40):
+            if(e[6] & 0x40):
                 (wert, einheit) = inKommaZahl(e)
             
                 if einheit != "nan": 
@@ -375,7 +378,7 @@ node = network.add_node(canlogger_id, edsfile)
 for n in network.scanner.nodes:
     j = 0
 
-    while j < 3:
+    while j < 1:
         create_cobid(n)
 
         event_is_set = cobReadyEvent.wait(3)
