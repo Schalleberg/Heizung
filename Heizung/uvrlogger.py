@@ -404,75 +404,111 @@ endegut_failed = 0
 batches_ok = 0
 batches_failed = 0
 
-while True:
-    print('Abfrage der Werte')
-    sdos = {}
 
-    # Schritt 1: Erzeuge komplette sdos
-    # Split in Batches nach Knoten Nr
-    # Abarbeitung der batches
-    # Auswertung
-    
-    for (typ, can_id) in uvrs:
-        if typ == "uvr16x2":
-            UVR16x2zeit_req(can_id)
-            UVR16x2EBez_req(can_id)
-            UVR16x2A_req(can_id)
-            #machenichts = "nichts"
+print('Abfrage der Werte')
+sdos = {}
 
-        if typ == 'uvr1611':
+# Schritt 1: Erzeuge komplette sdos
+# Split in Batches nach Knoten Nr
+# Abarbeitung der batches
+# Auswertung
 
-            UVR1611zeit_req(can_id)
-            UVR1611leseA_req(can_id)
-            UVR1611leseE_req(can_id)
+for (typ, can_id) in uvrs:
+    if typ == "uvr16x2":
+        UVR16x2zeit_req(can_id)
+        UVR16x2EBez_req(can_id)
+        UVR16x2A_req(can_id)
+        #machenichts = "nichts"
 
-    # Annahme fuer unteren Code ist, dass alle sdos komplett erzeugt sind. die erzeugung der batches muss ruecksicht auf den knoten nehmen
+    if typ == 'uvr1611':
 
-    batches = erzeugeBatches(sdos.keys())
-    #print batches
+        UVR1611zeit_req(can_id)
+        UVR1611leseA_req(can_id)
+        UVR1611leseE_req(can_id)
 
-    n_batches = len(batches)
-    success = np.full(n_batches, 3, np.int)
+# Annahme fuer unteren Code ist, dass alle sdos komplett erzeugt sind. die erzeugung der batches muss ruecksicht auf den knoten nehmen
 
-    endegut = False            
+batches = erzeugeBatches(sdos.keys())
+#print batches
 
-    while np.max(success) != 0:
-        j = np.argmax(success)
+n_batches = len(batches)
+success = np.full(n_batches, 3, np.int)
 
-        print("running batch:")
-        print(batches[j])
+endegut = False            
 
-        r = sdo_batch_ausfuehrung(batches[j])
+while np.max(success) != 0:
+    j = np.argmax(success)
 
-        if r == False:
-            success[j] = success[j] - 1
-            endegut = False
-            batches_failed = batches_failed + 1
-        if r == True:
-            success[j] = 0
-            endegut = True
-            batches_ok = batches_ok +1
+    print("running batch:")
+    print(batches[j])
 
-    if endegut:
-        endegut_ok = endegut_ok + 1
-    else:
-        endegut_failed= endegut_failed
+    r = sdo_batch_ausfuehrung(batches[j])
 
-    print("batches ok: %d batches failed: %d endegut ok: %d endegut failed: %d" % (batches_ok, batches_failed, endegut_ok, endegut_failed))
+    if r == False:
+        success[j] = success[j] - 1
+        endegut = False
+        batches_failed = batches_failed + 1
+    if r == True:
+        success[j] = 0
+        endegut = True
+        batches_ok = batches_ok +1
 
-    #Auswertung
-    for (typ, can_id) in uvrs:
-        if typ == "uvr1611":
-            UVR1611zeit_auswertung(can_id)
-            UVR1611leseA_auswertung(can_id)
-            UVR1611leseE_auswertung(can_id)
+if endegut:
+    endegut_ok = endegut_ok + 1
+else:
+    endegut_failed= endegut_failed
 
-        if typ == "uvr16x2":
-            UVR16x2zeit_auswertung(can_id)
-            UVR16x2EBez_auswertung(can_id)
-            UVR16x2A_auswertung(can_id)
+print("batches ok: %d batches failed: %d endegut ok: %d endegut failed: %d" % (batches_ok, batches_failed, endegut_ok, endegut_failed))
 
-    druckeDict()
+#Auswertung
+for (typ, can_id) in uvrs:
+    if typ == "uvr1611":
+        UVR1611zeit_auswertung(can_id)
+        UVR1611leseA_auswertung(can_id)
+        UVR1611leseE_auswertung(can_id)
 
-    print(' .... warte bis zur naechsten runde')
-    time.sleep(60)
+    if typ == "uvr16x2":
+        UVR16x2zeit_auswertung(can_id)
+        UVR16x2EBez_auswertung(can_id)
+        UVR16x2A_auswertung(can_id)
+
+druckeDict()
+
+#c21181a0-b949-11ee-b489-59a0a74a8f11 (Speicher oben)
+#7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6 (Speicher unten)
+#f3ac31e0-bd12-11ee-8cb3-f9680ed6e792 (Boiler oben)
+#636935b0-bd13-11ee-8954-c1dccdf507a6 (Boiler unten)
+#9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91 (Solar VL1)
+#b74461f0-bd13-11ee-a151-2523bad0830c (Kollektor)
+print("Speicher oben: %.1f" % (respDict["1_e_7"]) )
+print("Speicher unten: %.1f" % (respDict["1_e_5"]))
+
+
+from requests import post
+
+#Speicher oben
+resp = post("http://energielogger/middleware/data/c21181a0-b949-11ee-b489-59a0a74a8f11.json", data={"value" : respDict["1_e_7"] })
+print("Speicher oben: Response from energielogger: " + str(resp))
+
+# Speicher unten
+resp = post("http://energielogger/middleware/data/7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6.json", data={"value" : respDict["1_e_5"] })
+print("Speicher unten: Response from energielogger: " + str(resp))
+
+# Boiler oben
+resp = post("http://energielogger/middleware/data/f3ac31e0-bd12-11ee-8cb3-f9680ed6e792.json", data={"value" : respDict["1_e_6"] })
+print("Boiler oben: Response from energielogger: " + str(resp))
+
+# Boiler unten
+resp = post("http://energielogger/middleware/data/636935b0-bd13-11ee-8954-c1dccdf507a6.json", data={"value" : respDict["1_e_4"] })
+print("Boiler unten: Response from energielogger: " + str(resp))
+
+# Solar VL1
+resp = post("http://energielogger/middleware/data/9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91.json", data={"value" : respDict["1_e_2"] })
+print("Solar VL1: Response from energielogger: " + str(resp))
+
+# Kollektor
+resp = post("http://energielogger/middleware/data/b74461f0-bd13-11ee-a151-2523bad0830c.json", data={"value" : respDict["1_e_1"] })
+print("Kollektor: Response from energielogger: " + str(resp))
+
+print(' .... warte bis zur naechsten runde')
+
