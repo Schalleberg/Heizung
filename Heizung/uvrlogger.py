@@ -480,6 +480,12 @@ druckeDict()
 #636935b0-bd13-11ee-8954-c1dccdf507a6 (Boiler unten)
 #9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91 (Solar VL1)
 #b74461f0-bd13-11ee-a151-2523bad0830c (Kollektor)
+
+
+#b7b874c0-78a6-11ef-a67d-a32414cb239c (Speicher oben)
+
+
+
 print("Speicher oben: %.1f" % (respDict["1_e_7"]) )
 print("Speicher unten: %.1f" % (respDict["1_e_5"]))
 
@@ -488,6 +494,9 @@ from requests import post
 
 #Speicher oben
 resp = post("http://energielogger/middleware/data/c21181a0-b949-11ee-b489-59a0a74a8f11.json", data={"value" : respDict["1_e_7"] })
+print("Speicher oben: Response from energielogger: " + str(resp))
+
+resp = post("http://schalleberg/middleware/data/b7b874c0-78a6-11ef-a67d-a32414cb239c.json", data={"value" : respDict["1_e_7"] })
 print("Speicher oben: Response from energielogger: " + str(resp))
 
 # Speicher unten
