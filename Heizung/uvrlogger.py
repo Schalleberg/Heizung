@@ -363,6 +363,14 @@ def erzeugeBatches(keys):
         
 ############
 
+def sendToVolkszaehler(host, channelId, value, description):
+    try:
+        resp = post("http://%s/middleware/data/%s.json" %(host, channelId), data={"value" : value})
+        print("%s: Response from energielogger: "%(description) + str(resp))
+    except Exception as e:
+        print("Send to %s failed" %(description) + "Exception:" + str(e))
+
+
 network = canopen.Network()
 network.connect(channel='can0', bustype='socketcan')
 
@@ -493,31 +501,48 @@ print("Speicher unten: %.1f" % (respDict["1_e_5"]))
 from requests import post
 
 #Speicher oben
-resp = post("http://energielogger/middleware/data/c21181a0-b949-11ee-b489-59a0a74a8f11.json", data={"value" : respDict["1_e_7"] })
-print("Speicher oben: Response from energielogger: " + str(resp))
+sendToVolkszaehler("energielogger", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
+# resp = post("http://energielogger/middleware/data/c21181a0-b949-11ee-b489-59a0a74a8f11.json", data={"value" : respDict["1_e_7"] })
+# print("Speicher oben: Response from energielogger: " + str(resp))
 
-resp = post("http://schalleberg/middleware/data/b7b874c0-78a6-11ef-a67d-a32414cb239c.json", data={"value" : respDict["1_e_7"] })
-print("Speicher oben: Response from energielogger: " + str(resp))
+sendToVolkszaehler("localhost", "ebcc4b00-8ede-11ef-b2c3-531115468bd5", respDict["1_e_7"], "Speicher oben")
+# resp = post("http://schalleberg/middleware/data/ebcc4b00-8ede-11ef-b2c3-531115468bd5.json", data={"value" : respDict["1_e_7"] })
+# print("Speicher oben: Response from host 'schalleberg': " + str(resp))
 
 # Speicher unten
 resp = post("http://energielogger/middleware/data/7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6.json", data={"value" : respDict["1_e_5"] })
 print("Speicher unten: Response from energielogger: " + str(resp))
 
+resp = post("http://schalleberg/middleware/data/865a7b60-8edf-11ef-ab34-a74ff0f857ff.json", data={"value" : respDict["1_e_5"] })
+print("Speicher unten: Response from schalleberg: " + str(resp))
+
 # Boiler oben
 resp = post("http://energielogger/middleware/data/f3ac31e0-bd12-11ee-8cb3-f9680ed6e792.json", data={"value" : respDict["1_e_6"] })
 print("Boiler oben: Response from energielogger: " + str(resp))
+
+resp = post("http://schalleberg/middleware/data/ef5b6360-8edf-11ef-bb8e-1f834a780bbd.json", data={"value" : respDict["1_e_6"] })
+print("Boiler oben: Response from schalleberg: " + str(resp))
 
 # Boiler unten
 resp = post("http://energielogger/middleware/data/636935b0-bd13-11ee-8954-c1dccdf507a6.json", data={"value" : respDict["1_e_4"] })
 print("Boiler unten: Response from energielogger: " + str(resp))
 
+resp = post("http://schalleberg/middleware/data/11747c20-8ee0-11ef-9249-dbae6e1bc1f2.json", data={"value" : respDict["1_e_4"] })
+print("Boiler unten: Response from schalleberg: " + str(resp))
+
 # Solar VL1
 resp = post("http://energielogger/middleware/data/9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91.json", data={"value" : respDict["1_e_2"] })
 print("Solar VL1: Response from energielogger: " + str(resp))
 
+resp = post("http://schalleberg/middleware/data/41b39760-8ee0-11ef-a9b9-85d3b58a066d.json", data={"value" : respDict["1_e_2"] })
+print("Solar VL1: Response from schalleberg: " + str(resp))
+
 # Kollektor
 resp = post("http://energielogger/middleware/data/b74461f0-bd13-11ee-a151-2523bad0830c.json", data={"value" : respDict["1_e_1"] })
 print("Kollektor: Response from energielogger: " + str(resp))
+
+resp = post("http://schalleberg/middleware/data/7d7b0c20-8ee0-11ef-8016-5be3e4142b2d.json", data={"value" : respDict["1_e_1"] })
+print("Kollektor: Response from schalleberg: " + str(resp))
 
 print(' .... warte bis zur naechsten runde')
 
