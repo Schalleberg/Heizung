@@ -366,7 +366,7 @@ def erzeugeBatches(keys):
 def sendToVolkszaehler(host, channelId, value, description):
     try:
         resp = post("http://%s/middleware/data/%s.json" %(host, channelId), data={"value" : value})
-        print("%s: Response from energielogger: "%(description) + str(resp))
+        print("%s: Response from %s: " % (description, host) + str(resp))
     except Exception as e:
         print("Send to %s failed" %(description) + "Exception:" + str(e))
 
