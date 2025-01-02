@@ -549,5 +549,14 @@ sendToVolkszaehler("localhost", "7d7b0c20-8ee0-11ef-8016-5be3e4142b2d", respDict
 # resp = post("http://schalleberg/middleware/data/7d7b0c20-8ee0-11ef-8016-5be3e4142b2d.json", data={"value" : respDict["1_e_1"] })
 # print("Kollektor: Response from schalleberg: " + str(resp))
 
+# Rohrkanal 1
+sendToVolkszaehler("energielogger", "41e307f0-c8f5-11ef-8bfa-e1fa657729ff", respDict["1_e_13"], "Rohrkanal 1")
+#sendToVolkszaehler("localhost", "...", respDict["1_e_13"], "Kollektor")
+
+# Rohrkanal 2
+sendToVolkszaehler("energielogger", "5fef15c0-c8f5-11ef-9f73-1329595b1a2d", respDict["1_e_14"], "Rohrkanal 2")
+#sendToVolkszaehler("localhost", "....", respDict["1_e_14"], "Kollektor")
+
+
 print(' .... warte bis zur naechsten runde')
 
