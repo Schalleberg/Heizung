@@ -9,6 +9,13 @@ import random
 import json
 import numpy as np
 
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+
+PRIMARY_KEY_FILE="schalleberghome-6a3b7-firebase-adminsdk-knz7x-dc223f0241.json"
+
 respDict = {}
 emit_lock = threading.Lock()
 
@@ -369,7 +376,25 @@ def sendToVolkszaehler(host, channelId, value, description):
         print("%s: Response from %s: " % (description, host) + str(resp))
     except Exception as e:
         print("Send to %s failed" %(description) + "Exception:" + str(e))
+        
+        
+def sendToFirebase(variableName, value, description):
+    try:
+        ref = db.reference(variableName)
+        ref.set(value)
+    except Exception as e:
+        print("Write to firebase realtime database failed" %(description) + "Exception:" + str(e))
 
+
+#initialize firebase
+# Fetch the service account key JSON file contents
+cred = credentials.Certificate(PRIMARY_KEY_FILE)
+
+# Initialize the app with a service account, granting admin privileges
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://schalleberghome-6a3b7-default-rtdb.europe-west1.firebasedatabase.app'
+})
+    
 
 network = canopen.Network()
 network.connect(channel='can0', bustype='socketcan')
@@ -556,7 +581,7 @@ sendToVolkszaehler("energielogger", "41e307f0-c8f5-11ef-8bfa-e1fa657729ff", resp
 # Rohrkanal 2
 sendToVolkszaehler("energielogger", "5fef15c0-c8f5-11ef-9f73-1329595b1a2d", respDict["1_e_14"], "Rohrkanal 2")
 #sendToVolkszaehler("localhost", "....", respDict["1_e_14"], "Kollektor")
-
+sendToFirebase("heating/passthroughTemp1", respDict["1_e_14"],"Rohrkanal 2")
 
 print(' .... warte bis zur naechsten runde')
 
