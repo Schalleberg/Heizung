@@ -1,5 +1,11 @@
 pip3 install canopen
 
+sudo apt-get install python-dev libatlas-base-dev
+pip3 install numpy==1.19.5
+
+
+
+
 - Einträge in config.txt
 - Eintrag in /etc/network/interfaces
 
