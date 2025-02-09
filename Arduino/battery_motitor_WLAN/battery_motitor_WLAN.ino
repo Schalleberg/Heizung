@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 
 
 //#define RUN_ON_PC
@@ -77,16 +78,18 @@ void loop() {
 
     Serial.println("Connected to server successful!");
 
-    client.print("Hello from ESP32!");
+ /*   client.print("Hello from ESP32!");
 
     String answer = client.readString();
     Serial.println("Answer:" + answer);
+
+
+    delay(1000);*/
+
+    sendBatteryChargeCurrent(client, 3.4);
+
     Serial.println("Disconnecting...");
     client.stop();
-
-    delay(10000);
-
-
 
 //WiFiClient client = server.available();
 //client.println("HTTP/1.1 200 OK");
@@ -113,3 +116,24 @@ void loop() {
   delay(3000);
 }
 
+
+void sendBatteryChargeCurrent(WiFiClient client, float value) {
+    HTTPClient http;
+    http.begin(client, SERVER_ADDRESS + String("battery_charge_current"));
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    String postData = "current=" + String(value, 1);;  
+
+    Serial.println("Send: " + http.getString());
+
+    int httpResponseCode = http.POST(postData);  
+
+    if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("Antwort: " + response);
+    } else {
+        Serial.println("Fehler: " + String(httpResponseCode));
+    }
+
+    http.end();
+}
