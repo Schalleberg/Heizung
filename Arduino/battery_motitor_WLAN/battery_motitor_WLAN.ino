@@ -2,15 +2,29 @@
 #include <ESP8266HTTPClient.h>
 
 #include <Wire.h>
+#include "Adafruit_INA3221.h"
+Adafruit_INA3221 ina3221;
+#define INA3221_NUM_CHANNELS  3
 
-/*
+typedef struct {
+  float current[INA3221_NUM_CHANNELS];
+  float voltage[INA3221_NUM_CHANNELS];
+
+  void printVotageCurrent(int channel) {
+    Serial.printf("Channel %u: voltage: %0.1f V current %0.2f A", channel, voltage[channel], current[channel]);
+    Serial.println();
+  }
+} measurement_t;
+
+
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET     1 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-*/
+
 
 //#define RUN_ON_PC
 
@@ -40,10 +54,9 @@ const char * SERVER_ADDRESS = "192.168.1.123";
 const char * SERVER_ADDRESS = "192.168.2.1";
 #endif
 
-/*void initDisplay()
+void initDisplay()
 {
   Serial.println("Initialze Display");
-  Wire.begin(2,0);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
   Serial.print("Display: ");
@@ -63,11 +76,46 @@ const char * SERVER_ADDRESS = "192.168.2.1";
 
   display.drawLine(0, 0, display.width()-1, display.height()-1, SSD1306_WHITE);
   display.display();
-}*/
+}
+
+void initINA3221(void){
+  // Initialize the INA3221
+  if (ina3221.begin(0x40, &Wire)) { // can use other I2C addresses or buses
+    Serial.println("INA3221 Found!");
+    ina3221.reset();
+    ina3221.setAveragingMode(INA3221_AVG_16_SAMPLES);
+
+    // Set shunt resistances for all channels to 0.05 ohms
+    for (uint8_t i = 0; i < 3; i++) {
+      ina3221.setShuntResistance(i, 0.1);
+    }
+    ina3221.setPowerValidLimits(3.0 /* lower limit */, 15.0 /* upper limit */);
+  } else {
+    Serial.println("Failed to find INA3221 chip");
+  }
+
+}
+
+
+void measureVoltageAndCurrents(measurement_t* pMeasurements)
+{
+  for (uint8_t i = 0; i < INA3221_NUM_CHANNELS; i++) {
+    pMeasurements->current[i] = ina3221.getCurrentAmps(i);
+    pMeasurements->voltage[i] = ina3221.getBusVoltage(i);   
+  }
+
+}
 
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
+  
+  Wire.begin(2,0);
+  Serial.println("Initialize INA3221....");
+  initINA3221();
+  //initDisplay();
+
  /* delay(10);
 
   if (WiFi.config(local_IP, gateway, subnet)) {
@@ -103,6 +151,12 @@ void setup() {
 }
 
 void loop() {
+  measurement_t measurements;
+
+  measureVoltageAndCurrents(&measurements);
+  measurements.printVotageCurrent(0);
+/*
+
     WiFiClient client;
 
     if (!client.connect(SERVER_ADDRESS, PORT)) {
@@ -115,19 +169,22 @@ void loop() {
 
     Serial.println("Connected to server successful!");
 
- /*   client.print("Hello from ESP32!");
+    client.print("Hello from ESP32!");
 
     String answer = client.readString();
     Serial.println("Answer:" + answer);
 
 
-    delay(1000);*/
+    delay(1000);
+
+   
 
     sendBatteryChargeCurrent(client, 3.4);
 
     Serial.println("Disconnecting...");
     client.stop();
 
+*/
 //WiFiClient client = server.available();
 //client.println("HTTP/1.1 200 OK");
 //client.println("Content-Type: text/html");
