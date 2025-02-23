@@ -2,13 +2,15 @@
 #include <ESP8266HTTPClient.h>
 
 #include <Wire.h>
+
+/*
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET     1 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
+*/
 
 //#define RUN_ON_PC
 
@@ -38,6 +40,30 @@ const char * SERVER_ADDRESS = "192.168.1.123";
 const char * SERVER_ADDRESS = "192.168.2.1";
 #endif
 
+/*void initDisplay()
+{
+  Serial.println("Initialze Display");
+  Wire.begin(2,0);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
+  Serial.print("Display: ");
+  Serial.print(display.width());
+  Serial.print("x");
+  Serial.println(display.height());
+  display.display();
+  delay(2000); // Pause for 2 seconds  
+
+
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.setTextColor(WHITE);
+  display.display();
+
+  display.drawLine(0, 0, display.width()-1, display.height()-1, SSD1306_WHITE);
+  display.display();
+}*/
 
 
 void setup() {
@@ -73,27 +99,7 @@ void setup() {
   Serial.print("GATEWAY: ");
   Serial.println(WiFi.gatewayIP()); */
 
-  Serial.println("Initialze Display");
-  Wire.begin(2,0);
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
-  Serial.print("Display: ");
-  Serial.print(display.width());
-  Serial.print("x");
-  Serial.println(display.height());
-  display.display();
-  delay(2000); // Pause for 2 seconds  
-
-
-
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.setTextColor(WHITE);
-  display.display();
-
-  display.drawLine(0, 0, display.width()-1, display.height()-1, SSD1306_WHITE);
-  display.display();
 }
 
 void loop() {
