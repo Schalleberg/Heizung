@@ -14,7 +14,9 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-PRIMARY_KEY_FILE="schalleberghome-6a3b7-firebase-adminsdk-knz7x-dc223f0241.json"
+# Firebase
+PRIMARY_KEY_FILE="schallebergfarm-firebase-adminsdk-fbsvc-fe101a4402.json"
+DATABASE_URL = 'https://schallebergfarm-default-rtdb.europe-west1.firebasedatabase.app'
 
 respDict = {}
 emit_lock = threading.Lock()
@@ -392,7 +394,7 @@ cred = credentials.Certificate(PRIMARY_KEY_FILE)
 
 # Initialize the app with a service account, granting admin privileges
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://schalleberghome-6a3b7-default-rtdb.europe-west1.firebasedatabase.app'
+    'databaseURL': DATABASE_URL
 })
     
 
