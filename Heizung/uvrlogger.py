@@ -529,12 +529,12 @@ from requests import post
 
 #Speicher oben
 sendToVolkszaehler("energielogger", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
-sendToVolkszaehler("localhost", "ebcc4b00-8ede-11ef-b2c3-531115468bd5", respDict["1_e_7"], "Speicher oben")
+sendToVolkszaehler("localhost", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
 sendToFirebase("heating/tempBufferTankTop", respDict["1_e_7"],"Speicher oben")
 
 # Speicher unten
 sendToVolkszaehler("energielogger", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
-sendToVolkszaehler("localhost", "865a7b60-8edf-11ef-ab34-a74ff0f857ff", respDict["1_e_5"], "Speicher unten")
+sendToVolkszaehler("localhost", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
 sendToFirebase("heating/tempBufferTankBottom", respDict["1_e_5"],"Speicher unten")
 # resp = post("http://energielogger/middleware/data/7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6.json", data={"value" : respDict["1_e_5"] })
 # print("Speicher unten: Response from energielogger: " + str(resp))
