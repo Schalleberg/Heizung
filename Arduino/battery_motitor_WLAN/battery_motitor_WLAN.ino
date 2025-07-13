@@ -26,12 +26,13 @@ typedef struct {
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 */
 
-
-//#define RUN_ON_PC
+#define RUN_ON_PC
 
 #ifdef RUN_ON_PC
-const char *ssid = "Fridolin"; // Your ssid
-const char *password = "mein-esel-fridolin"; // Your Password
+//const char *ssid = "Fridolin"; // Your ssid
+//const char *password = "mein-esel-fridolin"; // Your Password
+const char *ssid = "Oukitel";
+const char *password = "fridolin1";
 #else
 const char *ssid = "Battery_Monitor"; // Your ssid
 const char *password = "solaranlage"; // Your Password
@@ -39,10 +40,13 @@ const char *password = "solaranlage"; // Your Password
 
 
 IPAddress subnet(255, 255, 255, 0);			            // Subnet Mask
-IPAddress gateway(192, 168, 2, 1);			            // Default Gateway
+//IPAddress gateway(192, 168, 2, 1);			            // Default Gateway
+IPAddress gateway(172, 19, 12, 163);			            // Default Gateway
+const char* hostname = "ESP32";
 
 #ifdef RUN_ON_PC
-IPAddress local_IP(192, 168, 1, 10);			        // Static IP Address for ESP8266
+//IPAddress local_IP(192, 168, 1, 10);			        // Static IP Address for ESP8266
+IPAddress local_IP(172, 19, 12, 50);			        // Static IP Address for ESP8266
 #else
 IPAddress local_IP(192, 168, 2, 10);			        // Static IP Address for ESP8266
 #endif
@@ -55,6 +59,11 @@ const char * SERVER_ADDRESS = "192.168.1.123";
 const char * SERVER_ADDRESS = "192.168.2.1";
 #endif
 
+
+WiFiServer server(80);
+
+
+/*
 void initDisplay()
 {
   Serial.println("Initialze Display");
@@ -78,6 +87,7 @@ void initDisplay()
   display.drawLine(0, 0, display.width()-1, display.height()-1, SSD1306_WHITE);
   display.display();
 }
+*/
 
 void initINA3221(void){
   // Initialize the INA3221
@@ -117,8 +127,20 @@ void setup() {
   initINA3221();
   //initDisplay();
 
- /* delay(10);
+  delay(10);
 
+  WiFi.mode(WIFI_STA);
+  WiFi.config(local_IP, gateway, subnet);//, primaryDNS, secondaryDNS);
+  WiFi.hostname(hostname);
+  WiFi.begin(ssid, password);
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("WiFi Failed!");
+    while(true) yield();
+  }
+
+
+
+/*
   if (WiFi.config(local_IP, gateway, subnet)) {
     Serial.println("Static IP Configured");
   }
@@ -133,11 +155,13 @@ void setup() {
   Serial.println(ssid);
 
   WiFi.begin(ssid, password);
-
+*/
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+
+  
   Serial.println("");
   Serial.println("WiFi connected");
 
@@ -146,16 +170,29 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   Serial.print("GATEWAY: ");
-  Serial.println(WiFi.gatewayIP()); */
+  Serial.println(WiFi.gatewayIP());
 
+  server.begin();
 
 }
 
 void loop() {
   measurement_t measurements;
 
-  measureVoltageAndCurrents(&measurements);
-  measurements.printVotageCurrent(0);
+  // listen for incoming clients
+  WiFiClient client = server.available();
+  
+  if (client == true) {
+    measureVoltageAndCurrents(&measurements);
+    measurements.printVotageCurrent(0);
+       // read bytes from the incoming client and write them back
+    // to any clients connected to the server:
+    Serial.println("Client connected");
+    Serial.println(client.readString());
+    client.printf("voltage=%.1f", measurements.voltage[0]);
+  }
+
+
 /*
 
     WiFiClient client;
