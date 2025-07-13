@@ -6,6 +6,9 @@
 Adafruit_INA3221 ina3221;
 #define INA3221_NUM_CHANNELS  3
 
+
+#include "ArduinoJson.h"
+
 typedef struct {
   float current[INA3221_NUM_CHANNELS];
   float voltage[INA3221_NUM_CHANNELS];
@@ -13,6 +16,15 @@ typedef struct {
   void printVotageCurrent(int channel) {
     Serial.printf("Channel %u: voltage: %0.1f V current %0.2f A", channel, voltage[channel], current[channel]);
     Serial.println();
+  }
+
+  String serializeAsJson() {
+    JsonDocument doc;
+    String ret;
+    doc["voltage"] = voltage[0];
+    doc["current_0"] = current[0];
+    serializeJson(doc,ret);
+    return ret;
   }
 } measurement_t;
 
@@ -189,7 +201,7 @@ void loop() {
     // to any clients connected to the server:
     Serial.println("Client connected");
     Serial.println(client.readString());
-    client.printf("voltage=%.1f", measurements.voltage[0]);
+    client.print(measurements.serializeAsJson());
   }
 
 
@@ -245,7 +257,7 @@ void loop() {
 //client.print("<p style='text-align: center;'>&nbsp;");
 //client.print("</p>");
 //client.println("</html>");
-  delay(3000);
+ delay(10);
 }
 
 

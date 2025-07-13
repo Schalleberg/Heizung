@@ -1,4 +1,6 @@
 import socket
+import json
+
 
 if __name__ == '__main__':
     host = "172.19.12.50"#socket.gethostname()  # as both code is running on same pc
@@ -13,5 +15,8 @@ if __name__ == '__main__':
     data = client_socket.recv(1024).decode()  # receive response
 
     print('Received from server: ' + data)  # show in terminal
+
+    deserialzedData = json.loads(data)
+    print(deserialzedData)
 
     client_socket.close()  # close the connection
