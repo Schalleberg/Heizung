@@ -2,7 +2,7 @@ import socket
 
 if __name__ == '__main__':
     host = "172.19.12.50"#socket.gethostname()  # as both code is running on same pc
-    port = 80  # socket server port number
+    port = 5678  # socket server port number
 
     client_socket = socket.socket()  # instantiate
     client_socket.connect((host, port))  # connect to the server
