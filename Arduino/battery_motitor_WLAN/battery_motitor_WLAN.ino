@@ -6,6 +6,8 @@
 Adafruit_INA3221 ina3221;
 #define INA3221_NUM_CHANNELS  3
 
+#include "I2CScanner.h"
+I2CScanner scanner;
 
 #include "ArduinoJson.h"
 
@@ -28,15 +30,12 @@ typedef struct {
   }
 } measurement_t;
 
-
-
-/*#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET     1 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-*/
+#define OLED_RESET     -1 
+Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define RUN_ON_PC
 
@@ -75,31 +74,29 @@ const char * SERVER_ADDRESS = "192.168.2.1";
 WiFiServer server(5678);
 
 
-/*
-void initDisplay()
-{
-  Serial.println("Initialze Display");
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+void initDisplay() {
+  Serial.printf("Initialze Display (heap %6d bytes)...\n", ESP.getFreeHeap());
+  delay(250); // wait for the OLED to power up
+  bool ret = display.begin(0x3C, true); // Address 0x3C default
 
-  Serial.print("Display: ");
-  Serial.print(display.width());
-  Serial.print("x");
-  Serial.println(display.height());
-  display.display();
-  delay(2000); // Pause for 2 seconds  
+  if(ret == false) {
+    Serial.println("... failed");
+    return;
+  }
+  Serial.println("... done");
 
-
-
+  // Clear the buffer.
   display.clearDisplay();
+
+  // draw a single pixel
+  display.drawPixel(10, 10, SH110X_WHITE);
   display.setTextSize(1);
   display.setCursor(0, 0);
-  display.setTextColor(WHITE);
+  display.setTextColor(SH110X_WHITE);
+  display.print("Voltage");
   display.display();
 
-  display.drawLine(0, 0, display.width()-1, display.height()-1, SSD1306_WHITE);
-  display.display();
 }
-*/
 
 void initINA3221(void){
   // Initialize the INA3221
@@ -135,9 +132,15 @@ void setup() {
   delay(1000);
   
   Wire.begin(2,0);
+  scanner.Init();
+  scanner.Scan();
+
+
+  Serial.println("Initialize Display....");
+  initDisplay();
+  
   Serial.println("Initialize INA3221....");
   initINA3221();
-  //initDisplay();
 
   delay(10);
 
