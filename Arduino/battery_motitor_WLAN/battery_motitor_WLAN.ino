@@ -1,6 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
+#include <math.h>
+
 #include <Wire.h>
 #include "Adafruit_INA3221.h"
 Adafruit_INA3221 ina3221;
@@ -73,6 +75,9 @@ const char * SERVER_ADDRESS = "192.168.2.1";
 
 WiFiServer server(5678);
 
+static float roundTo1Decimal(float value) {
+  return round(value * 10.0) / 10.0;
+}
 
 void initDisplay() {
   Serial.printf("Initialze Display (heap %6d bytes)...\n", ESP.getFreeHeap());
@@ -87,13 +92,6 @@ void initDisplay() {
 
   // Clear the buffer.
   display.clearDisplay();
-
-  // draw a single pixel
-  display.drawPixel(10, 10, SH110X_WHITE);
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.setTextColor(SH110X_WHITE);
-  display.print("Voltage");
   display.display();
 
 }
@@ -105,10 +103,11 @@ void initINA3221(void){
     ina3221.reset();
     ina3221.setAveragingMode(INA3221_AVG_16_SAMPLES);
 
-    // Set shunt resistances for all channels to 0.05 ohms
-    for (uint8_t i = 0; i < 3; i++) {
-      ina3221.setShuntResistance(i, 0.1);
-    }
+    // Set shunt resistances for all channels
+    ina3221.setShuntResistance(0, 0.005);
+    ina3221.setShuntResistance(1, 0.1);
+    ina3221.setShuntResistance(2, 0.1);
+
     ina3221.setPowerValidLimits(3.0 /* lower limit */, 15.0 /* upper limit */);
   } else {
     Serial.println("Failed to find INA3221 chip");
@@ -124,6 +123,33 @@ void measureVoltageAndCurrents(measurement_t* pMeasurements)
     pMeasurements->voltage[i] = ina3221.getBusVoltage(i);   
   }
 
+}
+
+void displayMeasurements(measurement_t* pMeasurements)
+{
+  char txtBuffer[21];
+  display.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SH110X_BLACK);
+
+  display.cp437(true);  // Use correct CP437 character codes
+  display.setTextSize(3);
+  display.setTextColor(SH110X_WHITE);
+
+  int16_t x1=0, y1=0;
+  uint16_t width=0, height=0;
+  snprintf(txtBuffer, sizeof(txtBuffer), "%.1fV", roundTo1Decimal(pMeasurements->voltage[0]));
+  display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
+  display.setCursor((SCREEN_WIDTH - width) / 2, 0);
+  display.print(txtBuffer);
+
+  display.setTextSize(1);
+  snprintf(txtBuffer, sizeof(txtBuffer), "%3.1fA %3.1fA %3.1fA",
+                            roundTo1Decimal(pMeasurements->current[0]),
+                            roundTo1Decimal(pMeasurements->current[1]),
+                            roundTo1Decimal(pMeasurements->current[2]));
+  display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
+  display.setCursor((SCREEN_WIDTH - width) / 2, 30);
+  display.print(txtBuffer);
+  display.display();
 }
 
 
@@ -191,15 +217,22 @@ void setup() {
 
 }
 
+unsigned long ms = 0;
 void loop() {
   measurement_t measurements;
+  if (millis() - ms > 2000 || ms == 0)
+  {
+      ms = millis();
+      measureVoltageAndCurrents(&measurements);
+      measurements.printVotageCurrent(0);
+      displayMeasurements(&measurements);
+  }
 
+  
   // listen for incoming clients
   WiFiClient client = server.available();
   
   if (client == true) {
-    measureVoltageAndCurrents(&measurements);
-    measurements.printVotageCurrent(0);
        // read bytes from the incoming client and write them back
     // to any clients connected to the server:
     Serial.println("Client connected");
