@@ -252,9 +252,7 @@ void loop() {
         const char* httpVersion = strtok(NULL, " \n\r");   
 
         if (strcmp(method,"GET") == 0) {
-          String strUri(uri);
-          
-          if (strUri.startsWith("/?measurements")) {
+          if (strcmp(uri, "/?measurements") == 0) {
             String response("HTTP/1.1 200 OK\r\n");
             response += "Content-Type: application/json\r\n";
             response += "\r\n";
