@@ -64,7 +64,7 @@ IPAddress local_IP(172, 19, 12, 50);			        // Static IP Address for ESP8266
 IPAddress local_IP(192, 168, 2, 10);			        // Static IP Address for ESP8266
 #endif
 
-const uint16_t PORT = 1234;
+const uint16_t PORT = 80;
 
 #ifdef RUN_ON_PC
 const char * SERVER_ADDRESS = "192.168.1.123";
@@ -73,7 +73,7 @@ const char * SERVER_ADDRESS = "192.168.2.1";
 #endif
 
 
-WiFiServer server(5678);
+WiFiServer server(PORT);
 
 static float roundTo1Decimal(float value) {
   return round(value * 10.0) / 10.0;
@@ -155,12 +155,10 @@ void displayMeasurements(measurement_t* pMeasurements)
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  
+
   Wire.begin(2,0);
   scanner.Init();
   scanner.Scan();
-
 
   Serial.println("Initialize Display....");
   initDisplay();
@@ -174,10 +172,10 @@ void setup() {
   WiFi.config(local_IP, gateway, subnet);//, primaryDNS, secondaryDNS);
   WiFi.hostname(hostname);
   WiFi.begin(ssid, password);
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+/*  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("WiFi Failed!");
     while(true) yield();
-  }
+  }*/
 
 
 
@@ -218,6 +216,7 @@ void setup() {
 }
 
 unsigned long ms = 0;
+String strReq;
 void loop() {
   measurement_t measurements;
   if (millis() - ms > 2000 || ms == 0)
@@ -228,16 +227,62 @@ void loop() {
       displayMeasurements(&measurements);
   }
 
-  
-  // listen for incoming clients
-  WiFiClient client = server.available();
-  
-  if (client == true) {
-       // read bytes from the incoming client and write them back
-    // to any clients connected to the server:
-    Serial.println("Client connected");
-    Serial.println(client.readString());
-    client.print(measurements.serializeAsJson());
+  if (WiFi.status() == WL_CONNECTED) {
+    // listen for incoming clients
+    WiFiClient client = server.accept();
+    
+    if (client == true) {
+      Serial.println("Client connected.");
+      Serial.print("Available bytes: ");
+      Serial.println(client.available());
+      strReq = client.readString();
+      
+      size_t lenRequest = strReq.length();
+
+      if (lenRequest > 0) {
+        
+        char* request = (char*)malloc(lenRequest + 1);
+        strReq.toCharArray(request,lenRequest + 1);
+        Serial.print("Request:");
+        Serial.println(request);
+
+        // parse request
+        const char* method = strtok(request, " \n\r");
+        const char* uri = strtok(NULL, " \n\r");
+        const char* httpVersion = strtok(NULL, " \n\r");
+        Serial.println(method);
+        Serial.println(uri);
+        Serial.println(httpVersion);
+        
+
+        if (strcmp(method,"GET") == 0) {
+          String strUri(uri);
+          
+          if (strUri.startsWith("/?measurements")) {
+            String response("HTTP/1.1 200 OK\r\n");
+            //response += "Content-Type: application/json\r\n";
+            response += "Content-Type: text/html\r\n";
+            response += "\r\n";
+            response += "<HTML>\r\n";
+            response += measurements.serializeAsJson();
+            response += "</HTML>";
+            Serial.println("Response:");
+            Serial.println(response);
+            client.println(response);
+          } else {
+            Serial.println("Unknown URI");
+            client.println("HTTP/1.1 400 	Bad Request");
+            client.println();
+          }
+        } else {
+            Serial.println("Method not supported");
+            client.println("HTTP/1.1 400 	Bad Request");
+            client.println();
+        }
+        free(request);
+        client.stop();
+      }
+    }
   }
 
 
