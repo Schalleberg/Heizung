@@ -224,10 +224,13 @@ void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     // listen for incoming clients
     WiFiClient client = server.accept();
-    
+
     if (client == true) {
       String strReq;
       Serial.println("Client connected.");
+
+      client.setTimeout(500);
+
       Serial.print("Available bytes: ");
       Serial.println(client.available());
       strReq = client.readString();
