@@ -64,19 +64,13 @@ IPAddress local_IP(172, 19, 12, 50);			        // Static IP Address for ESP8266
 #else
 IPAddress local_IP(192, 168, 2, 10);			        // Static IP Address for ESP8266
 #endif
-
 const uint16_t PORT = 80;
 
-#ifdef RUN_ON_PC
-const char * SERVER_ADDRESS = "192.168.1.123";
-#else
-const char * SERVER_ADDRESS = "192.168.2.1";
-#endif
+const uint32_t MEASUREMENT_INTERVAL_MS= 2000;
+
 
 WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
-
 WiFiServer server(PORT);
-
 measurement_t measurements;
 
 static float roundTo1Decimal(float value) {
@@ -126,7 +120,6 @@ void measureVoltageAndCurrents(measurement_t* pMeasurements)
     pMeasurements->current[i] = ina3221.getCurrentAmps(i);
     pMeasurements->voltage[i] = ina3221.getBusVoltage(i);   
   }
-
 }
 
 void displayValues()
@@ -171,7 +164,6 @@ void displayValues()
   display.display();
 }
 
-
 void setup() {
   Serial.begin(115200);
 
@@ -205,16 +197,14 @@ void setup() {
   WiFi.begin(ssid, password);
 
   server.begin();
-
 }
 
 
 
 unsigned long ms = 0;
-
 void loop() {
   
-  if (millis() - ms > 2000 || ms == 0)
+  if (millis() - ms > MEASUREMENT_INTERVAL_MS || ms == 0)
   {
       ms = millis();
       measureVoltageAndCurrents(&measurements);
@@ -279,24 +269,3 @@ void loop() {
  delay(100);
 }
 
-
-void sendBatteryChargeCurrent(WiFiClient client, float value) {
-    HTTPClient http;
-    http.begin(client, SERVER_ADDRESS + String("battery_charge_current"));
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-    String postData = "current=" + String(value, 1);;  
-
-    Serial.println("Send: " + http.getString());
-
-    int httpResponseCode = http.POST(postData);  
-
-    if (httpResponseCode > 0) {
-        String response = http.getString();
-        Serial.println("Antwort: " + response);
-    } else {
-        Serial.println("Fehler: " + String(httpResponseCode));
-    }
-
-    http.end();
-}
