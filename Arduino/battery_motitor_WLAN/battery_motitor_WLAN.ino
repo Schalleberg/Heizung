@@ -249,35 +249,28 @@ void loop() {
         // parse request
         const char* method = strtok(request, " \n\r");
         const char* uri = strtok(NULL, " \n\r");
-        const char* httpVersion = strtok(NULL, " \n\r");
-        Serial.println(method);
-        Serial.println(uri);
-        Serial.println(httpVersion);
-        
+        const char* httpVersion = strtok(NULL, " \n\r");   
 
         if (strcmp(method,"GET") == 0) {
           String strUri(uri);
           
           if (strUri.startsWith("/?measurements")) {
             String response("HTTP/1.1 200 OK\r\n");
-            //response += "Content-Type: application/json\r\n";
-            response += "Content-Type: text/html\r\n";
+            response += "Content-Type: application/json\r\n";
             response += "\r\n";
-            response += "<HTML>\r\n";
             response += measurements.serializeAsJson();
-            response += "</HTML>";
-            Serial.println("Response:");
-            Serial.println(response);
             client.println(response);
           } else {
-            Serial.println("Unknown URI");
-            client.println("HTTP/1.1 400 	Bad Request");
+            Serial.println();
+            client.println("HTTP/1.1 400 	Bad Request\r\n");
             client.println();
+            client.println("Unknown URI\r\n");
           }
         } else {
-            Serial.println("Method not supported");
-            client.println("HTTP/1.1 400 	Bad Request");
+            Serial.println("");
+            client.println("HTTP/1.1 400 	Bad Request\r\n");
             client.println();
+            client.println("Method not supported\r\n");
         }
         free(request);
         client.stop();
