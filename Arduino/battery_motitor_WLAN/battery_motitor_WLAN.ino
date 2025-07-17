@@ -17,6 +17,7 @@ typedef struct {
   float current[INA3221_NUM_CHANNELS];
   float voltage[INA3221_NUM_CHANNELS];
 
+
   void printVotageCurrent(int channel) {
     Serial.printf("Channel %u: voltage: %0.1f V current %0.2f A", channel, voltage[channel], current[channel]);
     Serial.println();
@@ -72,8 +73,11 @@ const char * SERVER_ADDRESS = "192.168.1.123";
 const char * SERVER_ADDRESS = "192.168.2.1";
 #endif
 
+WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 
 WiFiServer server(PORT);
+
+measurement_t measurements;
 
 static float roundTo1Decimal(float value) {
   return round(value * 10.0) / 10.0;
@@ -125,7 +129,7 @@ void measureVoltageAndCurrents(measurement_t* pMeasurements)
 
 }
 
-void displayMeasurements(measurement_t* pMeasurements)
+void displayValues()
 {
   char txtBuffer[21];
   display.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SH110X_BLACK);
@@ -136,18 +140,33 @@ void displayMeasurements(measurement_t* pMeasurements)
 
   int16_t x1=0, y1=0;
   uint16_t width=0, height=0;
-  snprintf(txtBuffer, sizeof(txtBuffer), "%.1fV", roundTo1Decimal(pMeasurements->voltage[0]));
+
+  // display voltage
+  snprintf(txtBuffer, sizeof(txtBuffer), "%.1fV", roundTo1Decimal(measurements.voltage[0]));
   display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
   display.setCursor((SCREEN_WIDTH - width) / 2, 0);
   display.print(txtBuffer);
 
+  // display currents
   display.setTextSize(1);
   snprintf(txtBuffer, sizeof(txtBuffer), "%3.1fA %3.1fA %3.1fA",
-                            roundTo1Decimal(pMeasurements->current[0]),
-                            roundTo1Decimal(pMeasurements->current[1]),
-                            roundTo1Decimal(pMeasurements->current[2]));
+                            roundTo1Decimal(measurements.current[0]),
+                            roundTo1Decimal(measurements.current[1]),
+                            roundTo1Decimal(measurements.current[2]));
   display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
   display.setCursor((SCREEN_WIDTH - width) / 2, 30);
+  display.print(txtBuffer);
+
+  // show status
+  display.setTextSize(1);
+  if (WiFi.status() == WL_CONNECTED) {
+    snprintf(txtBuffer, sizeof(txtBuffer), "IP: %s", WiFi.localIP().toString().c_str());
+  } else {
+    snprintf(txtBuffer, sizeof(txtBuffer), "IP: disconnected");
+  }
+
+  display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
+  display.setCursor((SCREEN_WIDTH - width) / 2, 50);
   display.print(txtBuffer);
   display.display();
 }
@@ -171,60 +190,35 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.config(local_IP, gateway, subnet);//, primaryDNS, secondaryDNS);
   WiFi.hostname(hostname);
-  WiFi.begin(ssid, password);
-/*  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("WiFi Failed!");
-    while(true) yield();
-  }*/
 
+  gotIpEventHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP& event)
+  {
+    Serial.print("WIFI connected, IP: ");
+    Serial.println(WiFi.localIP());
+  });
 
-
-/*
-  if (WiFi.config(local_IP, gateway, subnet)) {
-    Serial.println("Static IP Configured");
-  }
-  else {
-    Serial.println("Static IP Configuration Failed");
-  }
-
-  // Connect to WiFi network
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  disconnectedEventHandler = WiFi.onStationModeDisconnected([](const WiFiEventStationModeDisconnected& event)
+  {
+    Serial.println("WIFI disconnected");
+  });
 
   WiFi.begin(ssid, password);
-*/
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  
-  Serial.println("");
-  Serial.println("WiFi connected");
-
-  // Print the IP address
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  Serial.print("GATEWAY: ");
-  Serial.println(WiFi.gatewayIP());
 
   server.begin();
 
 }
 
+
+
 unsigned long ms = 0;
-String strReq;
+
 void loop() {
-  measurement_t measurements;
+  
   if (millis() - ms > 2000 || ms == 0)
   {
       ms = millis();
       measureVoltageAndCurrents(&measurements);
       measurements.printVotageCurrent(0);
-      displayMeasurements(&measurements);
   }
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -232,6 +226,7 @@ void loop() {
     WiFiClient client = server.accept();
     
     if (client == true) {
+      String strReq;
       Serial.println("Client connected.");
       Serial.print("Available bytes: ");
       Serial.println(client.available());
@@ -240,7 +235,6 @@ void loop() {
       size_t lenRequest = strReq.length();
 
       if (lenRequest > 0) {
-        
         char* request = (char*)malloc(lenRequest + 1);
         strReq.toCharArray(request,lenRequest + 1);
         Serial.print("Request:");
@@ -276,60 +270,10 @@ void loop() {
     }
   }
 
-
-/*
-
-    WiFiClient client;
-
-    if (!client.connect(SERVER_ADDRESS, PORT)) {
-
-        Serial.println("Connection to host failed");
-
-        delay(1000);
-        return;
-    }
-
-    Serial.println("Connected to server successful!");
-
-    client.print("Hello from ESP32!");
-
-    String answer = client.readString();
-    Serial.println("Answer:" + answer);
+  displayValues();
 
 
-    delay(1000);
-
-   
-
-    sendBatteryChargeCurrent(client, 3.4);
-
-    Serial.println("Disconnecting...");
-    client.stop();
-
-*/
-//WiFiClient client = server.available();
-//client.println("HTTP/1.1 200 OK");
-//client.println("Content-Type: text/html");
-//client.println("Connection: close");  // the connection will be closed after completion of the response
-//client.println("Refresh: 5");  // refresh the page automatically every 5 sec
-//client.println();
-//client.println("<!DOCTYPE HTML>");
-//client.println("<html>");
-//client.print("<p style='text-align: center;'>&nbsp;</p>");
-//client.print("<p style='text-align: center;'><span style='font-size: x-large;'><strong>ESP8266 and DS18B20 Temperature Sensor Server</strong></span></p>");
-//client.print("<p style='text-align: center;'><span style='font-size: x-large;'><strong>www.elec-cafe.com</strong></span></p>");
-//client.print("<p style='text-align: center;'><span style='color: #0000ff;'><strong style='font-size: large;'>Temperature = ");
-//client.println(celsius);
-//
-//client.print("<p style='text-align: center;'><span style='color: #0000ff;'><strong style='font-size: large;'>Switch = ");
-//client.println(switchVal);
-//
-//client.print("<p style='text-align: center;'>&nbsp;</p>");
-//client.print("<p style='text-align: center;'>&nbsp;</p>");
-//client.print("<p style='text-align: center;'>&nbsp;");
-//client.print("</p>");
-//client.println("</html>");
- delay(10);
+ delay(100);
 }
 
 
