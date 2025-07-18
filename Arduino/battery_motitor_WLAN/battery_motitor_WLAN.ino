@@ -40,36 +40,35 @@ typedef struct {
 #define OLED_RESET     -1 
 Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-#define RUN_ON_PC
 
-#ifdef RUN_ON_PC
+//#define USE_SOFT_AP
+
+#ifdef USE_SOFT_AP
+const char *ssid = "Battery_Monitor";
+const char *password = "solaranlage";
+
+IPAddress local_IP(192, 168, 2, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress gateway(192, 168, 2, 1);
+#else
 //const char *ssid = "Fridolin"; // Your ssid
 //const char *password = "mein-esel-fridolin"; // Your Password
 const char *ssid = "Oukitel";
 const char *password = "fridolin1";
-#else
-const char *ssid = "Battery_Monitor"; // Your ssid
-const char *password = "solaranlage"; // Your Password
-#endif
 
-
-IPAddress subnet(255, 255, 255, 0);			            // Subnet Mask
-//IPAddress gateway(192, 168, 2, 1);			            // Default Gateway
+IPAddress subnet(255, 255, 255, 0);
 IPAddress gateway(172, 19, 12, 163);			            // Default Gateway
 const char* hostname = "ESP32";
+//IPAddress local_IP(192, 168, 1, 10);
+IPAddress local_IP(172, 19, 12, 50);
 
-#ifdef RUN_ON_PC
-//IPAddress local_IP(192, 168, 1, 10);			        // Static IP Address for ESP8266
-IPAddress local_IP(172, 19, 12, 50);			        // Static IP Address for ESP8266
-#else
-IPAddress local_IP(192, 168, 2, 10);			        // Static IP Address for ESP8266
+WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 #endif
+
 const uint16_t PORT = 80;
 
 const uint32_t MEASUREMENT_INTERVAL_MS= 2000;
 
-
-WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 WiFiServer server(PORT);
 measurement_t measurements;
 
@@ -152,11 +151,15 @@ void displayValues()
 
   // show status
   display.setTextSize(1);
+  #ifdef USE_SOFT_AP
+  snprintf(txtBuffer, sizeof(txtBuffer), "IP: %s N=%u", WiFi.softAPIP().toString().c_str(), WiFi.softAPgetStationNum());
+  #else
   if (WiFi.status() == WL_CONNECTED) {
     snprintf(txtBuffer, sizeof(txtBuffer), "IP: %s", WiFi.localIP().toString().c_str());
   } else {
     snprintf(txtBuffer, sizeof(txtBuffer), "IP: disconnected");
   }
+  #endif
 
   display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
   display.setCursor((SCREEN_WIDTH - width) / 2, 50);
@@ -179,8 +182,42 @@ void setup() {
 
   delay(10);
 
+#ifdef USE_SOFT_AP
+  // setupWiFi AP
+  Serial.print("Setup Soft-AP: ");
+  WiFi.onSoftAPModeStationConnected([](const WiFiEventSoftAPModeStationConnected& event)
+  {
+    Serial.println("WIFI onSoftAPModeStationConnected");
+  });
+
+  WiFi.onWiFiModeChange([](const WiFiEventModeChange& event)
+  {
+    Serial.println("WIFI onWiFiModeChange");
+  });
+
+  if(WiFi.softAPConfig(local_IP, gateway, subnet))
+  {
+    Serial.println("successful");
+  } else {
+    Serial.println("failed");
+  }
+
+  //WiFi.hostname(hostname);
+  Serial.print("Start Soft-AP: ");
+  if(WiFi.softAP(ssid, password, 1, false, 2))
+    {
+    Serial.print("successful.");
+    Serial.print("IP: ");
+    Serial.println(WiFi.softAPIP());
+
+  } else {
+    Serial.println("failed");
+  }
+  Serial.println(WiFi.localIP());
+
+#else
   WiFi.mode(WIFI_STA);
-  WiFi.config(local_IP, gateway, subnet);//, primaryDNS, secondaryDNS);
+  WiFi.config(local_IP, gateway, subnet);
   WiFi.hostname(hostname);
 
   gotIpEventHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP& event)
@@ -195,6 +232,7 @@ void setup() {
   });
 
   WiFi.begin(ssid, password);
+  #endif
 
   server.begin();
 }
@@ -211,7 +249,11 @@ void loop() {
       measurements.printVotageCurrent(0);
   }
 
+#ifdef USE_SOFT_AP
+  if (WiFi.softAPgetStationNum() > 0) {
+#else
   if (WiFi.status() == WL_CONNECTED) {
+#endif
     // listen for incoming clients
     WiFiClient client = server.accept();
 
