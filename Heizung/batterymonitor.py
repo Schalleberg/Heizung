@@ -3,6 +3,8 @@ import json
 
 import requests
 
+import databases
+
 
 if __name__ == '__main__':
     #host = "192.168.2.1"
@@ -16,5 +18,7 @@ if __name__ == '__main__':
     print(resp.text)
     deserialzedData = json.loads(resp.text)
     print(deserialzedData)
+    
+    databases.sendToFirebase("battery/batteryVoltage", deserialzedData["voltage"],"Batteriespannung")
     
     
