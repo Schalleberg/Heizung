@@ -9,14 +9,8 @@ import random
 import json
 import numpy as np
 
-
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
-
-# Firebase
-PRIMARY_KEY_FILE="schallebergfarm-firebase-adminsdk-fbsvc-fe101a4402.json"
-DATABASE_URL = 'https://schallebergfarm-default-rtdb.europe-west1.firebasedatabase.app'
+import databases
+<
 
 respDict = {}
 emit_lock = threading.Lock()
@@ -372,31 +366,6 @@ def erzeugeBatches(keys):
         
 ############
 
-def sendToVolkszaehler(host, channelId, value, description):
-    try:
-        resp = post("http://%s/middleware/data/%s.json" %(host, channelId), data={"value" : value})
-        print("%s: Response from %s: " % (description, host) + str(resp))
-    except Exception as e:
-        print("Send to %s failed" %(description) + "Exception:" + str(e))
-        
-        
-def sendToFirebase(variableName, value, description):
-    try:
-        ref = db.reference(variableName)
-        ref.set(value)
-    except Exception as e:
-        print("Write to firebase realtime database failed" %(description) + "Exception:" + str(e))
-
-
-#initialize firebase
-# Fetch the service account key JSON file contents
-cred = credentials.Certificate(PRIMARY_KEY_FILE)
-
-# Initialize the app with a service account, granting admin privileges
-firebase_admin.initialize_app(cred, {
-    'databaseURL': DATABASE_URL
-})
-    
 
 network = canopen.Network()
 network.connect(channel='can0', bustype='socketcan')
@@ -525,17 +494,15 @@ print("Speicher oben: %.1f" % (respDict["1_e_7"]) )
 print("Speicher unten: %.1f" % (respDict["1_e_5"]))
 
 
-from requests import post
-
 #Speicher oben
-sendToVolkszaehler("energielogger", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
-sendToVolkszaehler("localhost", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
-sendToFirebase("heating/tempBufferTankTop", respDict["1_e_7"],"Speicher oben")
+databases.sendToVolkszaehler("energielogger", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
+databases.sendToVolkszaehler("localhost", "c21181a0-b949-11ee-b489-59a0a74a8f11", respDict["1_e_7"], "Speicher oben")
+databases.sendToFirebase("heating/tempBufferTankTop", respDict["1_e_7"],"Speicher oben")
 
 # Speicher unten
-sendToVolkszaehler("energielogger", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
-sendToVolkszaehler("localhost", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
-sendToFirebase("heating/tempBufferTankBottom", respDict["1_e_5"],"Speicher unten")
+databases.sendToVolkszaehler("energielogger", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
+databases.sendToVolkszaehler("localhost", "7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6", respDict["1_e_5"], "Speicher unten")
+databases.sendToFirebase("heating/tempBufferTankBottom", respDict["1_e_5"],"Speicher unten")
 # resp = post("http://energielogger/middleware/data/7e64c0a0-b94c-11ee-aeb9-8f2a2d346cf6.json", data={"value" : respDict["1_e_5"] })
 # print("Speicher unten: Response from energielogger: " + str(resp))
 #
@@ -543,9 +510,9 @@ sendToFirebase("heating/tempBufferTankBottom", respDict["1_e_5"],"Speicher unten
 # print("Speicher unten: Response from schalleberg: " + str(resp))
 
 # Boiler oben
-sendToVolkszaehler("energielogger", "f3ac31e0-bd12-11ee-8cb3-f9680ed6e792", respDict["1_e_6"], "Boiler oben")
-sendToVolkszaehler("localhost", "f3ac31e0-bd12-11ee-8cb3-f9680ed6e792", respDict["1_e_6"], "Boiler oben")
-sendToFirebase("heating/tempBoilerTop", respDict["1_e_6"],"Boiler oben")
+databases.sendToVolkszaehler("energielogger", "f3ac31e0-bd12-11ee-8cb3-f9680ed6e792", respDict["1_e_6"], "Boiler oben")
+databases.sendToVolkszaehler("localhost", "f3ac31e0-bd12-11ee-8cb3-f9680ed6e792", respDict["1_e_6"], "Boiler oben")
+databases.sendToFirebase("heating/tempBoilerTop", respDict["1_e_6"],"Boiler oben")
 # resp = post("http://energielogger/middleware/data/f3ac31e0-bd12-11ee-8cb3-f9680ed6e792.json", data={"value" : respDict["1_e_6"] })
 # print("Boiler oben: Response from energielogger: " + str(resp))
 #
@@ -553,9 +520,9 @@ sendToFirebase("heating/tempBoilerTop", respDict["1_e_6"],"Boiler oben")
 # print("Boiler oben: Response from schalleberg: " + str(resp))
 
 # Boiler unten
-sendToVolkszaehler("energielogger", "636935b0-bd13-11ee-8954-c1dccdf507a6", respDict["1_e_4"], "Boiler unten")
-sendToVolkszaehler("localhost", "636935b0-bd13-11ee-8954-c1dccdf507a6", respDict["1_e_4"], "Boiler unten")
-sendToFirebase("heating/tempBoilerBottom", respDict["1_e_4"],"Boiler unten")
+databases.sendToVolkszaehler("energielogger", "636935b0-bd13-11ee-8954-c1dccdf507a6", respDict["1_e_4"], "Boiler unten")
+databases.sendToVolkszaehler("localhost", "636935b0-bd13-11ee-8954-c1dccdf507a6", respDict["1_e_4"], "Boiler unten")
+databases.sendToFirebase("heating/tempBoilerBottom", respDict["1_e_4"],"Boiler unten")
 # resp = post("http://energielogger/middleware/data/636935b0-bd13-11ee-8954-c1dccdf507a6.json", data={"value" : respDict["1_e_4"] })
 # print("Boiler unten: Response from energielogger: " + str(resp))
 #
@@ -563,8 +530,8 @@ sendToFirebase("heating/tempBoilerBottom", respDict["1_e_4"],"Boiler unten")
 # print("Boiler unten: Response from schalleberg: " + str(resp))
 
 # Solar VL1
-sendToVolkszaehler("energielogger", "9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91", respDict["1_e_2"], "Solar VL1")
-sendToVolkszaehler("localhost", "9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91", respDict["1_e_2"], "Solar VL1")
+databases.sendToVolkszaehler("energielogger", "9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91", respDict["1_e_2"], "Solar VL1")
+databases.sendToVolkszaehler("localhost", "9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91", respDict["1_e_2"], "Solar VL1")
 # resp = post("http://energielogger/middleware/data/9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91.json", data={"value" : respDict["1_e_2"] })
 # print("Solar VL1: Response from energielogger: " + str(resp))
 #
@@ -572,8 +539,8 @@ sendToVolkszaehler("localhost", "9fcaaed0-bd13-11ee-bb45-1b1ef5c56e91", respDict
 # print("Solar VL1: Response from schalleberg: " + str(resp))
 
 # Kollektor
-sendToVolkszaehler("energielogger", "b74461f0-bd13-11ee-a151-2523bad0830c", respDict["1_e_1"], "Kollektor")
-sendToVolkszaehler("localhost", "b74461f0-bd13-11ee-a151-2523bad0830c", respDict["1_e_1"], "Kollektor")
+databases.sendToVolkszaehler("energielogger", "b74461f0-bd13-11ee-a151-2523bad0830c", respDict["1_e_1"], "Kollektor")
+databases.sendToVolkszaehler("localhost", "b74461f0-bd13-11ee-a151-2523bad0830c", respDict["1_e_1"], "Kollektor")
 # resp = post("http://energielogger/middleware/data/b74461f0-bd13-11ee-a151-2523bad0830c.json", data={"value" : respDict["1_e_1"] })
 # print("Kollektor: Response from energielogger: " + str(resp))
 #
@@ -581,12 +548,12 @@ sendToVolkszaehler("localhost", "b74461f0-bd13-11ee-a151-2523bad0830c", respDict
 # print("Kollektor: Response from schalleberg: " + str(resp))
 
 # Rohrkanal 1
-sendToVolkszaehler("localhost", "41e307f0-c8f5-11ef-8bfa-e1fa657729ff", respDict["1_e_13"], "Rohrkanal 1")
-sendToFirebase("heating/passthroughTemp1", respDict["1_e_13"],"Rohrkanal 1")
+databases.sendToVolkszaehler("localhost", "41e307f0-c8f5-11ef-8bfa-e1fa657729ff", respDict["1_e_13"], "Rohrkanal 1")
+databases.sendToFirebase("heating/passthroughTemp1", respDict["1_e_13"],"Rohrkanal 1")
 
 # Rohrkanal 2
-sendToVolkszaehler("localhost", "5fef15c0-c8f5-11ef-9f73-1329595b1a2d", respDict["1_e_14"], "Rohrkanal 2")
-sendToFirebase("heating/passthroughTemp2", respDict["1_e_14"],"Rohrkanal 2")
+databases.sendToVolkszaehler("localhost", "5fef15c0-c8f5-11ef-9f73-1329595b1a2d", respDict["1_e_14"], "Rohrkanal 2")
+databases.sendToFirebase("heating/passthroughTemp2", respDict["1_e_14"],"Rohrkanal 2")
 
 print(' .... warte bis zur naechsten runde')
 
