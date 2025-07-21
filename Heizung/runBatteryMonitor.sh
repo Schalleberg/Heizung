@@ -1,1 +1,1 @@
-python3 /home/pi/Heizung/Heizung/batteryMonitor.py
+python3 /home/pi/Heizung/Heizung/batterymonitor.py
