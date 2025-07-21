@@ -19,6 +19,6 @@ if __name__ == '__main__':
     deserialzedData = json.loads(resp.text)
     print(deserialzedData)
     
-    #databases.sendToFirebase("battery/batteryVoltage", deserialzedData["voltage"],"Batteriespannung")
+    databases.sendToFirebase("battery/batteryVoltage", deserialzedData["voltage"],"Batteriespannung")
     databases.sendToVolkszaehler("localhost", "0f8549e0-6669-11f0-98b0-cf5b56a3e9e5", deserialzedData["voltage"], "Batteriespannung")
     
