@@ -10,7 +10,6 @@ import json
 import numpy as np
 
 import databases
-<
 
 respDict = {}
 emit_lock = threading.Lock()
