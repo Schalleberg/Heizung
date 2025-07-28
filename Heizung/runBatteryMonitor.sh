@@ -1,1 +1,4 @@
-python3 /home/pi/Heizung/Heizung/batterymonitor.py --privateKey  /home/pi/MobileAlerts/TempLogger/pushsafer_key.dat --statusFilePath=statusFile.json
+HOME_DIR=/home/pi
+RAM_DISK_PATH=$HOME_DIR/RamDisk
+
+python3 $HOME_DIR/Heizung/Heizung/batterymonitor.py --privateKey  $HOME_DIR/MobileAlerts/TempLogger/pushsafer_key.dat --statusFilePath=$RAM_DISK_PATH/
