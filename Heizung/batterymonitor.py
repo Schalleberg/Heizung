@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     if dictStatusFile["battery_low_alarm_active"] == False:
         if deserialzedData["voltage"] < BATTERY_LOW_THRESHOLD:
-            print("BATTERY LOW ALARM! U=" + deserialzedData["voltage"])
+            print("BATTERY LOW ALARM! U%.1f"%(deserialzedData["voltage"]))
             dictStatusFile["battery_low_alarm_active"] = True
             try:
                 send_push_notification(title="Temperature Monitor",
