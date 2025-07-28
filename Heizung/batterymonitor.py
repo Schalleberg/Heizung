@@ -99,18 +99,18 @@ if __name__ == '__main__':
             dictStatusFile["battery_low_alarm_active"] = True
             try:
                 send_push_notification(title="Temperature Monitor",
-                                       message="BATTERY LOW ALARM: " + "U=" + deserialzedData["voltage"],
+                                       message="BATTERY LOW ALARM: " + "U=%.1f"%(deserialzedData["voltage"]),
                                        privateKey=pushSaferPrivateKey,
                                        soundNr=SOUND_NR_ALERT)
             except:
                 pass
     else:
         if deserialzedData["voltage"] > (BATTERY_LOW_THRESHOLD + BATTERY_LOW_HYSTERESE):
-                print("BATTERY LOW ALARM INACTIVE U=" + deserialzedData["voltage"])
+                print("BATTERY LOW ALARM INACTIVE U=%.1f"%(deserialzedData["voltage"]))
                 dictStatusFile["battery_low_alarm_active"] = True
                 try:
                     send_push_notification(title="Temperature Monitor",
-                                           message="BATTERY LOW ALARM INACTIVE U=" + deserialzedData["voltage"],
+                                           message="BATTERY LOW ALARM INACTIVE U=%.1f"%(deserialzedData["voltage"]),
                                            privateKey=pushSaferPrivateKey,
                                            soundNr=SOUND_NR_NO_ALERT)
                 except:
