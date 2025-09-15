@@ -8,6 +8,8 @@
 Adafruit_INA3221 ina3221;
 #define INA3221_NUM_CHANNELS  3
 
+#define VOLTAGE_CHANNEL 2
+
 #include "I2CScanner.h"
 I2CScanner scanner;
 
@@ -26,8 +28,11 @@ typedef struct {
   String serializeAsJson() {
     JsonDocument doc;
     String ret;
-    doc["voltage"] = voltage[0];
+    doc["voltage"] = voltage[VOLTAGE_CHANNEL];
     doc["current_0"] = current[0];
+    doc["current_1"] = current[1];
+    doc["current_2"] = current[2];
+
     serializeJson(doc,ret);
     return ret;
   }
@@ -41,7 +46,7 @@ typedef struct {
 Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
-//#define USE_SOFT_AP
+#define USE_SOFT_AP
 
 #ifdef USE_SOFT_AP
 const char *ssid = "Battery_Monitor";
@@ -103,7 +108,7 @@ void initINA3221(void){
     // Set shunt resistances for all channels
     ina3221.setShuntResistance(0, 0.005);
     ina3221.setShuntResistance(1, 0.1);
-    ina3221.setShuntResistance(2, 0.1);
+    ina3221.setShuntResistance(2, 0.001);
 
     ina3221.setPowerValidLimits(3.0 /* lower limit */, 15.0 /* upper limit */);
   } else {
@@ -134,7 +139,7 @@ void displayValues()
   uint16_t width=0, height=0;
 
   // display voltage
-  snprintf(txtBuffer, sizeof(txtBuffer), "%.1fV", roundTo1Decimal(measurements.voltage[0]));
+  snprintf(txtBuffer, sizeof(txtBuffer), "%.1fV", roundTo1Decimal(measurements.voltage[VOLTAGE_CHANNEL]));
   display.getTextBounds(txtBuffer, 0, 0, &x1, &y1, &width, &height);
   display.setCursor((SCREEN_WIDTH - width) / 2, 0);
   display.print(txtBuffer);
