@@ -91,6 +91,9 @@ if __name__ == '__main__':
     
     databases.sendToFirebase("battery/batteryVoltage", deserialzedData["voltage"],"Batteriespannung")
     databases.sendToVolkszaehler("localhost", "0f8549e0-6669-11f0-98b0-cf5b56a3e9e5", deserialzedData["voltage"], "Batteriespannung")
+    databases.sendToFirebase("battery/current_0", deserialzedData["current_0"],"Strom kleines Panel")
+    databases.sendToFirebase("battery/current_1", deserialzedData["current_1"],"Strom grosses Panel")
+    databases.sendToFirebase("battery/current_2", deserialzedData["current_2"],"Strom Wechselrichter")
     
 
     if dictStatusFile["battery_low_alarm_active"] == False:
