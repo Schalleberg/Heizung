@@ -106,8 +106,8 @@ void initINA3221(void){
     ina3221.setAveragingMode(INA3221_AVG_16_SAMPLES);
 
     // Set shunt resistances for all channels
-    ina3221.setShuntResistance(0, 0.005);
-    ina3221.setShuntResistance(1, 0.1);
+    ina3221.setShuntResistance(0, 0.001);
+    ina3221.setShuntResistance(1, 0.001);
     ina3221.setShuntResistance(2, 0.001);
 
     ina3221.setPowerValidLimits(3.0 /* lower limit */, 15.0 /* upper limit */);
